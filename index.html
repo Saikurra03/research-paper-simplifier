@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Research Paper Simplifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* =============================================================================
+           CSS Reset & Base Styles
+           ============================================================================= */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --primary-dark: #3730a3;
+            --primary-bg: #eef2ff;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --border-dark: #cbd5e1;
+            --success: #10b981;
+            --error: #ef4444;
+            --warning: #f59e0b;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: all 0.2s ease;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* =============================================================================
+           Header
+           ============================================================================= */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+            animation: pulse 15s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        /* =============================================================================
+           Main Container
+           ============================================================================= */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* =============================================================================
+           Input Section
+           ============================================================================= */
+        .input-section {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title .icon {
+            font-size: 1.5rem;
+        }
+
+        /* Textarea */
+        .textarea-wrapper {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .paper-textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: var(--text);
+            background: var(--bg);
+            resize: vertical;
+            transition: var(--transition);
+        }
+
+        .paper-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-bg);
+        }
+
+        .paper-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .char-count {
+            position: absolute;
+            bottom: 0.75rem;
+            right: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            background: var(--surface);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        /* Level Selector */
+        .level-selector {
+            margin-bottom: 1.5rem;
+        }
+
+        .level-selector label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+        }
+
+        .level-options {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .level-option {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .level-option input[type="radio"] {
+            display: none;
+        }
+
+        .level-option label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--surface);
+        }
+
+        .level-option label:hover {
+            border-color: var(--primary-light);
+            background: var(--primary-bg);
+        }
+
+        .level-option input[type="radio"]:checked + label {
+            border-color: var(--primary);
+            background: var(--primary-bg);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        .level-option .level-icon {
+            font-size: 1.5rem;
+        }
+
+        .level-option .level-info {
+            flex: 1;
+        }
+
+        .level-option .level-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text);
+        }
+
+        .level-option .level-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* Analyze Button */
+        .analyze-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .analyze-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .analyze-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .analyze-btn .btn-icon {
+            font-size: 1.25rem;
+        }
+
+        /* =============================================================================
+           Loading State
+           ============================================================================= */
+        .loading-section {
+            display: none;
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+            padding: 3rem 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .loading-section.active {
+            display: block;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .loading-subtext {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        /* =============================================================================
+           Error Message
+           ============================================================================= */
+        .error-message {
+            display: none;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: var(--radius-sm);
+            padding: 1rem 1.25rem;
+            margin-bottom: 2rem;
+            color: var(--error);
+            font-size: 0.9rem;
+        }
+
+        .error-message.active {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .error-message .error-icon {
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        /* =============================================================================
+           Results Section
+           ============================================================================= */
+        .results-section {
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .results-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .level-badge {
+            background: var(--primary-bg);
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .copy-all-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 0.5rem 1rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .copy-all-btn:hover {
+            background: var(--bg);
+            border-color: var(--border-dark);
+        }
+
+        /* Collapsible Sections */
+        .result-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 1rem;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+
+        .result-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .result-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            background: var(--surface);
+            transition: var(--transition);
+            user-select: none;
+        }
+
+        .result-card-header:hover {
+            background: var(--bg);
+        }
+
+        .result-card-header.left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .result-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .result-card-toggle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+        }
+
+        .result-card.open .result-card-toggle {
+            transform: rotate(180deg);
+        }
+
+        .result-card-body {
+            display: none;
+            padding: 0 1.25rem 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .result-card.open .result-card-body {
+            display: block;
+            padding-top: 1rem;
+        }
+
+        .result-card-body h1,
+        .result-card-body h2,
+        .result-card-body h3 {
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-card-body h1 { font-size: 1.5rem; }
+        .result-card-body h2 { font-size: 1.25rem; }
+        .result-card-body h3 { font-size: 1.1rem; }
+
+        .result-card-body p {
+            margin-bottom: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .result-card-body ul,
+        .result-card-body ol {
+            margin-left: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .result-card-body li {
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .result-card-body strong {
+            color: var(--text);
+        }
+
+        .result-card-body code {
+            background: var(--bg);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .result-card-body blockquote {
+            border-left: 3px solid var(--primary);
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .result-card-body hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 1rem 0;
+        }
+
+        /* New Session Button */
+        .new-session-btn {
+            display: block;
+            width: 100%;
+            max-width: 300px;
+            margin: 2rem auto 0;
+            padding: 0.875rem 2rem;
+            background: var(--surface);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            border-radius: var(--radius-sm);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .new-session-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* =============================================================================
+           Footer
+           ============================================================================= */
+        .footer {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        /* =============================================================================
+           Responsive Design
+           ============================================================================= */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.75rem;
+            }
+
+            .header p {
+                font-size: 0.95rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .input-section {
+                padding: 1.5rem;
+            }
+
+            .paper-textarea {
+                min-height: 200px;
+            }
+
+            .level-options {
+                flex-direction: column;
+            }
+
+            .results-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .results-meta {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .level-option label {
+                padding: 0.75rem;
+            }
+        }
+
+        /* =============================================================================
+           Animations
+           ============================================================================= */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-card {
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .result-card:nth-child(1) { animation-delay: 0.05s; }
+        .result-card:nth-child(2) { animation-delay: 0.1s; }
+        .result-card:nth-child(3) { animation-delay: 0.15s; }
+        .result-card:nth-child(4) { animation-delay: 0.2s; }
+        .result-card:nth-child(5) { animation-delay: 0.25s; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1>🧪 AI Research Paper Simplifier</h1>
+            <p>Transform complex research papers into clear, structured, and educational content</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Input Section -->
+        <section class="input-section" id="inputSection">
+            <h2 class="section-title">
+                <span class="icon">📝</span>
+                Paste Your Research Paper
+            </h2>
+            
+            <div class="textarea-wrapper">
+                <textarea 
+                    class="paper-textarea" 
+                    id="paperInput" 
+                    placeholder="Paste the full text of your research paper here...
+
+You can paste content from:
+• Research paper PDFs (copy-paste the text)
+• Academic journal articles
+• Conference papers
+• Preprints (arXiv, etc.)
+
+Tip: For best results, include the title, abstract, introduction, methodology, results, and conclusion sections."
+                ></textarea>
+                <span class="char-count" id="charCount">0 characters</span>
+            </div>
+
+            <div class="level-selector">
+                <label>Select Explanation Level:</label>
+                <div class="level-options">
+                    <div class="level-option">
+                        <input type="radio" name="level" id="levelSchool" value="school_student">
+                        <label for="levelSchool">
+                            <span class="level-icon">🧒</span>
+                            <div class="level-info">
+                                <div class="level-name">School Student</div>
+                                <div class="level-desc">Simple language, analogies</div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="level-option">
+                        <input type="radio" name="level" id="levelCollege" value="college_student" checked>
+                        <label for="levelCollege">
+                            <span class="level-icon">🎓</span>
+                            <div class="level-info">
+                                <div class="level-name">College Student</div>
+                                <div class="level-desc">Balanced, foundational</div>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="level-option">
+                        <input type="radio" name="level" id="levelResearcher" value="researcher">
+                        <label for="levelResearcher">
+                            <span class="level-icon">👨‍🔬</span>
+                            <div class="level-info">
+                                <div class="level-name">Researcher</div>
+                                <div class="level-desc">Technical, in-depth</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button class="analyze-btn" id="analyzeBtn" onclick="analyzePaper()">
+                <span class="btn-icon">🔬</span>
+                Analyze Research Paper
+            </button>
+        </section>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage">
+            <span class="error-icon">⚠️</span>
+            <span id="errorText"></span>
+        </div>
+
+        <!-- Loading Section -->
+        <section class="loading-section" id="loadingSection">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Analyzing Research Paper...</div>
+            <div class="loading-subtext">This may take 30-60 seconds depending on paper length</div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h2 class="results-title">📊 Analysis Results</h2>
+                <div class="results-meta">
+                    <span class="level-badge" id="levelBadge">College Student</span>
+                    <button class="copy-all-btn" onclick="copyAllResults()">
+                        📋 Copy All
+                    </button>
+                </div>
+            </div>
+            <div id="resultsContainer"></div>
+            <button class="new-session-btn" onclick="newSession()">
+                ✨ Analyze Another Paper
+            </button>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Powered by Google Gemini AI • Built for Students & Researchers</p>
+    </footer>
+
+    <script>
+        // =============================================================================
+        // State Management
+        // =============================================================================
+        
+        let isAnalyzing = false;
+        let rawResults = '';
+
+        // =============================================================================
+        // DOM Elements
+        // =============================================================================
+        
+        const paperInput = document.getElementById('paperInput');
+        const charCount = document.getElementById('charCount');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const inputSection = document.getElementById('inputSection');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const loadingSection = document.getElementById('loadingSection');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const levelBadge = document.getElementById('levelBadge');
+
+        // =============================================================================
+        // Event Listeners
+        // =============================================================================
+        
+        paperInput.addEventListener('input', () => {
+            const length = paperInput.value.length;
+            charCount.textContent = `${length.toLocaleString()} characters`;
+        });
+
+        // =============================================================================
+        // Core Functions
+        // =============================================================================
+        
+        function getSelectedLevel() {
+            const selected = document.querySelector('input[name="level"]:checked');
+            return selected ? selected.value : 'college_student';
+        }
+
+        function getLevelDisplayName(level) {
+            const names = {
+                'school_student': 'School Student',
+                'college_student': 'College Student',
+                'researcher': 'Researcher'
+            };
+            return names[level] || 'College Student';
+        }
+
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.add('active');
+            setTimeout(() => {
+                errorMessage.classList.remove('active');
+            }, 8000);
+        }
+
+        function hideError() {
+            errorMessage.classList.remove('active');
+        }
+
+        function setLoading(state) {
+            isAnalyzing = state;
+            analyzeBtn.disabled = state;
+            
+            if (state) {
+                analyzeBtn.innerHTML = '<span class="btn-icon">⏳</span> Analyzing...';
+                loadingSection.classList.add('active');
+                inputSection.style.display = 'none';
+                resultsSection.classList.remove('active');
+                hideError();
+            } else {
+                analyzeBtn.innerHTML = '<span class="btn-icon">🔬</span> Analyze Research Paper';
+                loadingSection.classList.remove('active');
+            }
+        }
+
+        async function analyzePaper() {
+            // Prevent duplicate requests
+            if (isAnalyzing) return;
+
+            const paperText = paperInput.value.trim();
+            
+            // Validation
+            if (!paperText) {
+                showError('Please paste your research paper content.');
+                paperInput.focus();
+                return;
+            }
+
+            if (paperText.length < 50) {
+                showError('Paper content is too short. Please provide a complete research paper.');
+                paperInput.focus();
+                return;
+            }
+
+            const level = getSelectedLevel();
+            setLoading(true);
+
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        paper: paperText,
+                        level: level
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Analysis failed. Please try again.');
+                }
+
+                // Store raw results for copy functionality
+                rawResults = data.result;
+                
+                // Update level badge
+                levelBadge.textContent = data.level || getLevelDisplayName(level);
+                
+                // Render results
+                renderResults(data.result);
+                
+                // Show results section
+                resultsSection.classList.add('active');
+                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            } catch (error) {
+                console.error('Analysis error:', error);
+                showError(error.message || 'An unexpected error occurred. Please try again.');
+                inputSection.style.display = 'block';
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // =============================================================================
+        // Results Rendering
+        // =============================================================================
+        
+        function parseMarkdownToHtml(markdown) {
+            let html = markdown;
+            
+            // Escape HTML entities (but preserve our markdown processing)
+            html = html.replace(/&/g, '&amp;')
+                       .replace(/</g, '&lt;')
+                       .replace(/>/g, '&gt;');
+            
+            // Headers
+            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+            
+            // Bold and italic
+            html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            
+            // Inline code
+            html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+            
+            // Horizontal rules
+            html = html.replace(/^---$/gm, '<hr>');
+            
+            // Unordered lists
+            html = html.replace(/^[-*] (.+)$/gm, '<li>$1</li>');
+            html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+            
+            // Ordered lists
+            html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+            
+            // Paragraphs (lines that aren't already wrapped)
+            html = html.replace(/^(?!<[hluo])(.+)$/gm, '<p>$1</p>');
+            
+            // Clean up empty paragraphs
+            html = html.replace(/<p>\s*<\/p>/g, '');
+            
+            return html;
+        }
+
+        function renderResults(markdownContent) {
+            // Split content by ## headers
+            const sections = [];
+            const lines = markdownContent.split('\n');
+            let currentSection = null;
+            let currentContent = [];
+
+            for (const line of lines) {
+                if (line.startsWith('## ')) {
+                    // Save previous section
+                    if (currentSection) {
+                        sections.push({
+                            title: currentSection,
+                            content: currentContent.join('\n').trim()
+                        });
+                    }
+                    // Start new section
+                    currentSection = line.replace('## ', '').trim();
+                    currentContent = [];
+                } else if (currentSection) {
+                    currentContent.push(line);
+                }
+            }
+
+            // Save last section
+            if (currentSection) {
+                sections.push({
+                    title: currentSection,
+                    content: currentContent.join('\n').trim()
+                });
+            }
+
+            // Generate HTML for sections
+            let html = '';
+            sections.forEach((section, index) => {
+                const isOpen = index < 3; // First 3 sections open by default
+                html += `
+                    <div class="result-card ${isOpen ? 'open' : ''}" onclick="toggleCard(this)">
+                        <div class="result-card-header">
+                            <div class="left">
+                                <span class="result-card-title">${escapeHtml(section.title)}</span>
+                            </div>
+                            <span class="result-card-toggle">▼</span>
+                        </div>
+                        <div class="result-card-body">
+                            ${parseMarkdownToHtml(section.content)}
+                        </div>
+                    </div>
+                `;
+            });
+
+            resultsContainer.innerHTML = html;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function toggleCard(card) {
+            card.classList.toggle('open');
+        }
+
+        // =============================================================================
+        // Utility Functions
+        // =============================================================================
+        
+        function copyAllResults() {
+            navigator.clipboard.writeText(rawResults).then(() => {
+                const btn = document.querySelector('.copy-all-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Copy failed:', err);
+                showError('Failed to copy results. Please try selecting and copying manually.');
+            });
+        }
+
+        function newSession() {
+            // Reset all states
+            paperInput.value = '';
+            charCount.textContent = '0 characters';
+            resultsSection.classList.remove('active');
+            resultsContainer.innerHTML = '';
+            inputSection.style.display = 'block';
+            rawResults = '';
+            hideError();
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // Focus on input
+            setTimeout(() => paperInput.focus(), 500);
+        }
+
+        // =============================================================================
+        // Keyboard Shortcuts
+        // =============================================================================
+        
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + Enter to analyze
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                analyzePaper();
+            }
+        });
+    </script>
+</body>
+</html>
