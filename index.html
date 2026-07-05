@@ -1,1042 +1,374 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Research Paper Simplifier</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* =============================================================================
-           CSS Reset & Base Styles
-           ============================================================================= */
-        *, *::before, *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #4f46e5;
-            --primary-light: #818cf8;
-            --primary-dark: #3730a3;
-            --primary-bg: #eef2ff;
-            --bg: #f8fafc;
-            --surface: #ffffff;
-            --text: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #94a3b8;
-            --border: #e2e8f0;
-            --border-dark: #cbd5e1;
-            --success: #10b981;
-            --error: #ef4444;
-            --warning: #f59e0b;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
-            --radius: 12px;
-            --radius-sm: 8px;
-            --transition: all 0.2s ease;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        /* =============================================================================
-           Header
-           ============================================================================= */
-        .header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            padding: 2rem 1rem;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
-            animation: pulse 15s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        .header-content {
-            position: relative;
-            z-index: 1;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.02em;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            font-weight: 300;
-        }
-
-        /* =============================================================================
-           Main Container
-           ============================================================================= */
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 2rem 1rem;
-        }
-
-        /* =============================================================================
-           Input Section
-           ============================================================================= */
-        .input-section {
-            background: var(--surface);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-md);
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .section-title .icon {
-            font-size: 1.5rem;
-        }
-
-        /* Textarea */
-        .textarea-wrapper {
-            position: relative;
-            margin-bottom: 1.5rem;
-        }
-
-        .paper-textarea {
-            width: 100%;
-            min-height: 300px;
-            padding: 1rem;
-            border: 2px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95rem;
-            line-height: 1.7;
-            color: var(--text);
-            background: var(--bg);
-            resize: vertical;
-            transition: var(--transition);
-        }
-
-        .paper-textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px var(--primary-bg);
-        }
-
-        .paper-textarea::placeholder {
-            color: var(--text-muted);
-        }
-
-        .char-count {
-            position: absolute;
-            bottom: 0.75rem;
-            right: 0.75rem;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            background: var(--surface);
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-        }
-
-        /* Level Selector */
-        .level-selector {
-            margin-bottom: 1.5rem;
-        }
-
-        .level-selector label {
-            display: block;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-bottom: 0.75rem;
-        }
-
-        .level-options {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .level-option {
-            flex: 1;
-            min-width: 150px;
-        }
-
-        .level-option input[type="radio"] {
-            display: none;
-        }
-
-        .level-option label {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 1rem;
-            border: 2px solid var(--border);
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            transition: var(--transition);
-            background: var(--surface);
-        }
-
-        .level-option label:hover {
-            border-color: var(--primary-light);
-            background: var(--primary-bg);
-        }
-
-        .level-option input[type="radio"]:checked + label {
-            border-color: var(--primary);
-            background: var(--primary-bg);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
-        }
-
-        .level-option .level-icon {
-            font-size: 1.5rem;
-        }
-
-        .level-option .level-info {
-            flex: 1;
-        }
-
-        .level-option .level-name {
-            font-weight: 600;
-            font-size: 0.95rem;
-            color: var(--text);
-        }
-
-        .level-option .level-desc {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-top: 0.25rem;
-        }
-
-        /* Analyze Button */
-        .analyze-btn {
-            width: 100%;
-            padding: 1rem 2rem;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-family: 'Inter', sans-serif;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-        }
-
-        .analyze-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .analyze-btn:active:not(:disabled) {
-            transform: translateY(0);
-        }
-
-        .analyze-btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-
-        .analyze-btn .btn-icon {
-            font-size: 1.25rem;
-        }
-
-        /* =============================================================================
-           Loading State
-           ============================================================================= */
-        .loading-section {
-            display: none;
-            background: var(--surface);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow-md);
-            padding: 3rem 2rem;
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .loading-section.active {
-            display: block;
-        }
-
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 1.5rem;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            font-size: 1.1rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .loading-subtext {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-top: 0.5rem;
-        }
-
-        /* =============================================================================
-           Error Message
-           ============================================================================= */
-        .error-message {
-            display: none;
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            border-radius: var(--radius-sm);
-            padding: 1rem 1.25rem;
-            margin-bottom: 2rem;
-            color: var(--error);
-            font-size: 0.9rem;
-        }
-
-        .error-message.active {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .error-message .error-icon {
-            font-size: 1.25rem;
-            flex-shrink: 0;
-        }
-
-        /* =============================================================================
-           Results Section
-           ============================================================================= */
-        .results-section {
-            display: none;
-        }
-
-        .results-section.active {
-            display: block;
-        }
-
-        .results-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .results-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text);
-        }
-
-        .results-meta {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .level-badge {
-            background: var(--primary-bg);
-            color: var(--primary);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .copy-all-btn {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            padding: 0.5rem 1rem;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .copy-all-btn:hover {
-            background: var(--bg);
-            border-color: var(--border-dark);
-        }
-
-        /* Collapsible Sections */
-        .result-card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            margin-bottom: 1rem;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            transition: var(--transition);
-        }
-
-        .result-card:hover {
-            box-shadow: var(--shadow-md);
-        }
-
-        .result-card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 1rem 1.25rem;
-            cursor: pointer;
-            background: var(--surface);
-            transition: var(--transition);
-            user-select: none;
-        }
-
-        .result-card-header:hover {
-            background: var(--bg);
-        }
-
-        .result-card-header.left {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .result-card-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text);
-        }
-
-        .result-card-toggle {
-            font-size: 1.25rem;
-            color: var(--text-muted);
-            transition: transform 0.3s ease;
-        }
-
-        .result-card.open .result-card-toggle {
-            transform: rotate(180deg);
-        }
-
-        .result-card-body {
-            display: none;
-            padding: 0 1.25rem 1.25rem;
-            border-top: 1px solid var(--border);
-        }
-
-        .result-card.open .result-card-body {
-            display: block;
-            padding-top: 1rem;
-        }
-
-        .result-card-body h1,
-        .result-card-body h2,
-        .result-card-body h3 {
-            margin-top: 1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .result-card-body h1 { font-size: 1.5rem; }
-        .result-card-body h2 { font-size: 1.25rem; }
-        .result-card-body h3 { font-size: 1.1rem; }
-
-        .result-card-body p {
-            margin-bottom: 0.75rem;
-            color: var(--text-secondary);
-        }
-
-        .result-card-body ul,
-        .result-card-body ol {
-            margin-left: 1.5rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .result-card-body li {
-            margin-bottom: 0.5rem;
-            color: var(--text-secondary);
-        }
-
-        .result-card-body strong {
-            color: var(--text);
-        }
-
-        .result-card-body code {
-            background: var(--bg);
-            padding: 0.15rem 0.4rem;
-            border-radius: 4px;
-            font-size: 0.9em;
-        }
-
-        .result-card-body blockquote {
-            border-left: 3px solid var(--primary);
-            padding-left: 1rem;
-            margin: 1rem 0;
-            color: var(--text-muted);
-            font-style: italic;
-        }
-
-        .result-card-body hr {
-            border: none;
-            border-top: 1px solid var(--border);
-            margin: 1rem 0;
-        }
-
-        /* New Session Button */
-        .new-session-btn {
-            display: block;
-            width: 100%;
-            max-width: 300px;
-            margin: 2rem auto 0;
-            padding: 0.875rem 2rem;
-            background: var(--surface);
-            color: var(--primary);
-            border: 2px solid var(--primary);
-            border-radius: var(--radius-sm);
-            font-family: 'Inter', sans-serif;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .new-session-btn:hover {
-            background: var(--primary);
-            color: white;
-        }
-
-        /* =============================================================================
-           Footer
-           ============================================================================= */
-        .footer {
-            text-align: center;
-            padding: 2rem 1rem;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        .footer a {
-            color: var(--primary);
-            text-decoration: none;
-        }
-
-        /* =============================================================================
-           Responsive Design
-           ============================================================================= */
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 1.75rem;
-            }
-
-            .header p {
-                font-size: 0.95rem;
-            }
-
-            .container {
-                padding: 1rem;
-            }
-
-            .input-section {
-                padding: 1.5rem;
-            }
-
-            .paper-textarea {
-                min-height: 200px;
-            }
-
-            .level-options {
-                flex-direction: column;
-            }
-
-            .results-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .results-meta {
-                width: 100%;
-                justify-content: space-between;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .header h1 {
-                font-size: 1.5rem;
-            }
-
-            .level-option label {
-                padding: 0.75rem;
-            }
-        }
-
-        /* =============================================================================
-           Animations
-           ============================================================================= */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .result-card {
-            animation: fadeIn 0.3s ease forwards;
-        }
-
-        .result-card:nth-child(1) { animation-delay: 0.05s; }
-        .result-card:nth-child(2) { animation-delay: 0.1s; }
-        .result-card:nth-child(3) { animation-delay: 0.15s; }
-        .result-card:nth-child(4) { animation-delay: 0.2s; }
-        .result-card:nth-child(5) { animation-delay: 0.25s; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Research Paper Simplifier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--primary:#4f46e5;--primary-light:#818cf8;--primary-hover:#4338ca;--bg:#f8fafc;--card:#fff;--text:#1e293b;--text-muted:#64748b;--border:#e2e8f0;--radius:16px;--shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);--shadow-md:0 4px 6px rgba(0,0,0,0.05),0 10px 15px rgba(0,0,0,0.04);--shadow-lg:0 10px 25px rgba(0,0,0,0.08),0 4px 10px rgba(0,0,0,0.04)}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* NAV */
+nav{background:rgba(255,255,255,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 40px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;transition:box-shadow 0.3s}
+nav.scrolled{box-shadow:0 4px 20px rgba(0,0,0,0.06)}
+.nav-brand{font-size:18px;font-weight:800;color:var(--primary);display:flex;align-items:center;gap:8px;letter-spacing:-0.3px}
+.nav-brand span{font-size:22px}
+.nav-links{display:flex;gap:4px}
+.nav-links button{background:none;border:none;padding:10px 20px;font-size:14px;font-weight:500;color:var(--text-muted);cursor:pointer;border-radius:10px;transition:all 0.25s;font-family:inherit;position:relative}
+.nav-links button:hover{background:#f1f5f9;color:var(--text)}
+.nav-links button.active{background:linear-gradient(135deg,#eef2ff,#e0e7ff);color:var(--primary);font-weight:600}
+
+/* PAGES */
+.page{display:none;max-width:1000px;margin:0 auto;padding:40px 24px;animation:fadeUp 0.4s ease}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* HERO */
+.hero{text-align:center;padding:80px 0 40px}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:linear-gradient(135deg,#eef2ff,#f0fdf4);border:1px solid #c7d2fe;border-radius:50px;font-size:12px;font-weight:600;color:var(--primary);margin-bottom:24px}
+.hero h1{font-size:52px;font-weight:800;color:var(--text);line-height:1.1;letter-spacing:-1.5px;max-width:700px;margin:0 auto}
+.hero h1 span{background:linear-gradient(135deg,var(--primary),#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:18px;color:var(--text-muted);margin-top:20px;max-width:560px;margin-left:auto;margin-right:auto;line-height:1.7}
+.hero-btn{display:inline-flex;align-items:center;gap:8px;margin-top:32px;padding:16px 36px;background:linear-gradient(135deg,var(--primary),#6366f1);color:#fff;border:none;border-radius:14px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s;font-family:inherit;box-shadow:0 4px 14px rgba(79,70,229,0.35)}
+.hero-btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(79,70,229,0.4)}
+.hero-btn:active{transform:translateY(0)}
+
+/* FEATURES */
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:60px}
+.feature-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:32px 24px;text-align:center;transition:all 0.3s;position:relative;overflow:hidden}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),#7c3aed,#06b6d4);opacity:0;transition:opacity 0.3s}
+.feature-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.feature-card:hover::before{opacity:1}
+.feature-icon{width:56px;height:56px;display:inline-flex;align-items:center;justify-content:center;border-radius:14px;font-size:28px;margin-bottom:16px}
+.feature-card:nth-child(1) .feature-icon{background:#dbeafe}
+.feature-card:nth-child(2) .feature-icon{background:#dcfce7}
+.feature-card:nth-child(3) .feature-icon{background:#fef3c7}
+.feature-card h3{font-size:16px;font-weight:700;margin-bottom:8px;color:var(--text)}
+.feature-card p{font-size:13px;color:var(--text-muted);line-height:1.6}
+
+/* ANALYZE CARD */
+.analyze-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:36px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.analyze-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--primary),#7c3aed)}
+.analyze-card h2{font-size:22px;font-weight:700;margin-bottom:28px;color:var(--text)}
+.form-row{display:flex;gap:16px;margin-bottom:20px}
+.form-group{flex:1}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.8px}
+select,textarea{width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;color:var(--text);background:var(--card);transition:all 0.25s}
+select:hover,textarea:hover{border-color:#cbd5e1}
+select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(79,70,229,0.1)}
+textarea{resize:vertical;min-height:200px;line-height:1.7}
+
+/* UPLOAD ZONE */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:40px 24px;text-align:center;cursor:pointer;transition:all 0.3s;margin-bottom:20px;background:linear-gradient(135deg,#fafbfc,#f8fafc);position:relative}
+.upload-zone:hover{border-color:var(--primary-light);background:linear-gradient(135deg,#f5f3ff,#ede9fe);transform:scale(1.01)}
+.upload-zone.dragover{border-color:var(--primary);background:linear-gradient(135deg,#ede9fe,#e0e7ff);transform:scale(1.02);box-shadow:0 0 0 4px rgba(79,70,229,0.1)}
+.upload-zone-icon{width:64px;height:64px;display:inline-flex;align-items:center;justify-content:center;border-radius:16px;background:linear-gradient(135deg,#eef2ff,#e0e7ff);font-size:32px;margin-bottom:12px}
+.upload-zone h4{font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px}
+.upload-zone p{font-size:13px;color:var(--text-muted)}
+.upload-zone input{display:none}
+.upload-info{display:none;align-items:center;gap:10px;padding:12px 16px;background:linear-gradient(135deg,#dcfce7,#bbf7d0);border-radius:10px;font-size:13px;font-weight:500;color:#15803d;margin-bottom:20px;border:1px solid #86efac}
+.upload-info.visible{display:flex}
+.upload-info button{background:none;border:none;color:#b91c1c;cursor:pointer;font-size:18px;margin-left:auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:8px;transition:background 0.2s}
+.upload-info button:hover{background:rgba(185,28,28,0.1)}
+.divider{display:flex;align-items:center;gap:14px;margin:20px 0;color:var(--text-muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
+
+/* BUTTONS */
+.analyze-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--primary),#6366f1);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;transition:all 0.3s;margin-top:20px;font-family:inherit;box-shadow:0 4px 14px rgba(79,70,229,0.3);position:relative;overflow:hidden}
+.analyze-btn::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);transition:left 0.5s}
+.analyze-btn:hover::after{left:100%}
+.analyze-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(79,70,229,0.4)}
+.analyze-btn:active{transform:translateY(0)}
+.analyze-btn:disabled{background:linear-gradient(135deg,#a5b4fc,#93a5f7);cursor:not-allowed;transform:none;box-shadow:none}
+
+/* STATUS BAR */
+.status-bar{display:none;align-items:center;justify-content:center;gap:12px;padding:16px;margin-top:20px;background:linear-gradient(135deg,#eef2ff,#e0e7ff);border-radius:12px;color:var(--primary);font-size:14px;font-weight:500;border:1px solid #c7d2fe}
+.status-bar.visible{display:flex}
+.spinner{width:20px;height:20px;border:3px solid #c7d2fe;border-top-color:var(--primary);border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* RESULTS */
+.results-section{display:none;margin-top:32px;animation:fadeUp 0.5s ease}
+.results-section.visible{display:block}
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.results-header h3{font-size:20px;font-weight:700}
+.btn-group{display:flex;gap:8px}
+.action-btn{padding:8px 16px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-muted);transition:all 0.25s;font-family:inherit;background:var(--card)}
+.action-btn:hover{background:#f1f5f9;color:var(--text);border-color:#cbd5e1}
+
+/* SECTION CARDS */
+.section-card{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:10px;overflow:hidden;transition:all 0.3s}
+.section-card:hover{box-shadow:var(--shadow-md);border-color:#cbd5e1}
+.section-card.open{box-shadow:var(--shadow-md)}
+.section-header{padding:16px 20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none;transition:background 0.2s}
+.section-header:hover{background:#f8fafc}
+.section-num{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:10px;font-size:13px;font-weight:700;margin-right:14px;flex-shrink:0;transition:transform 0.2s}
+.section-card:hover .section-num{transform:scale(1.05)}
+.section-title{font-size:15px;font-weight:600;color:var(--text);flex:1}
+.section-arrow{font-size:11px;color:var(--text-muted);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:#f1f5f9}
+.section-card.open .section-arrow{transform:rotate(180deg);background:#eef2ff;color:var(--primary)}
+.section-body{padding:0 20px 20px;display:none;font-size:14px;line-height:1.8;color:#374151}
+.section-card.open .section-body{display:block;animation:slideDown 0.3s ease}
+@keyframes slideDown{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.section-body p{margin:10px 0}
+.section-body ul,.section-body ol{margin:10px 0 10px 20px}
+.section-body li{margin:6px 0;padding-left:4px}
+.section-body strong{color:var(--text);font-weight:600}
+.section-body hr{border:none;height:1px;background:var(--border);margin:16px 0}
+.section-body code{background:#f1f5f9;padding:2px 8px;border-radius:6px;font-size:13px;font-family:'SF Mono',Monaco,Consolas,monospace}
+
+/* COLOR BADGES */
+.n-blue{background:linear-gradient(135deg,#dbeafe,#bfdbfe);color:#1d4ed8}
+.n-green{background:linear-gradient(135deg,#dcfce7,#bbf7d0);color:#15803d}
+.n-purple{background:linear-gradient(135deg,#ede9fe,#ddd6fe);color:#6d28d9}
+.n-orange{background:linear-gradient(135deg,#ffedd5,#fed7aa);color:#c2410c}
+.n-pink{background:linear-gradient(135deg,#fce7f3,#fbcfe8);color:#be185d}
+.n-teal{background:linear-gradient(135deg,#ccfbf1,#99f6e4);color:#0f766e}
+.n-red{background:linear-gradient(135deg,#fee2e2,#fecaca);color:#b91c1c}
+
+/* ABOUT PAGE */
+.about-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:40px;margin-bottom:20px;box-shadow:var(--shadow);transition:all 0.3s}
+.about-card:hover{box-shadow:var(--shadow-md)}
+.about-card h2{font-size:20px;font-weight:700;margin-bottom:16px;color:var(--text);display:flex;align-items:center;gap:10px}
+.about-card p{font-size:15px;line-height:1.8;color:var(--text-muted);margin-bottom:12px}
+.about-card ul{margin:16px 0 16px 24px}
+.about-card li{font-size:14px;color:var(--text-muted);line-height:1.8;margin:6px 0}
+.tech-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:20px}
+.tech-item{background:linear-gradient(135deg,#f8fafc,#f1f5f9);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all 0.2s}
+.tech-item:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.tech-item h4{font-size:14px;font-weight:700;margin-bottom:6px;color:var(--text)}
+.tech-item p{font-size:13px;margin:0;color:var(--text-muted)}
+
+/* FOOTER */
+footer{text-align:center;padding:40px;color:var(--text-muted);font-size:13px;border-top:1px solid var(--border);margin-top:60px;background:linear-gradient(180deg,var(--bg),#fff)}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+nav{padding:0 16px}
+.hero h1{font-size:32px}
+.features{grid-template-columns:1fr}
+.form-row{flex-direction:column}
+.tech-grid{grid-template-columns:1fr}
+.btn-group{flex-wrap:wrap}
+.results-header{flex-direction:column;gap:12px;align-items:flex-start}
+}
+</style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-content">
-            <h1>🧪 AI Research Paper Simplifier</h1>
-            <p>Transform complex research papers into clear, structured, and educational content</p>
-        </div>
-    </header>
+<nav id="mainNav">
+<div class="nav-brand"><span>&#128196;</span> PaperSimplifier</div>
+<div class="nav-links">
+<button class="active" onclick="showPage('home')">Home</button>
+<button onclick="showPage('analyze')">Analyze</button>
+<button onclick="showPage('about')">About</button>
+</div>
+</nav>
 
-    <!-- Main Content -->
-    <main class="container">
-        <!-- Input Section -->
-        <section class="input-section" id="inputSection">
-            <h2 class="section-title">
-                <span class="icon">📝</span>
-                Paste Your Research Paper
-            </h2>
-            
-            <div class="textarea-wrapper">
-                <textarea 
-                    class="paper-textarea" 
-                    id="paperInput" 
-                    placeholder="Paste the full text of your research paper here...
+<div id="page-home" class="page active">
+<div class="hero">
+<div class="hero-badge">&#9889; Powered by Cohere AI</div>
+<h1>Understand Research Papers<br>in <span>Plain Language</span></h1>
+<p>Paste any research paper or upload a PDF and get a structured, educational breakdown with explanations, flashcards, MCQs, and interview questions.</p>
+<button class="hero-btn" onclick="showPage('analyze')">Get Started <span>&#8594;</span></button>
+</div>
+<div class="features">
+<div class="feature-card"><div class="feature-icon">&#127919;</div><h3>25 Structured Sections</h3><p>From ELI10 explanations to technical deep-dives, methodology breakdowns, and research gaps.</p></div>
+<div class="feature-card"><div class="feature-icon">&#129504;</div><h3>Study Tools</h3><p>Auto-generated flashcards, MCQs, viva questions, and interview prep for exam readiness.</p></div>
+<div class="feature-card"><div class="feature-icon">&#128196;</div><h3>PDF Upload</h3><p>Upload PDF research papers directly - text is extracted automatically, no copy-paste needed.</p></div>
+</div>
+</div>
 
-You can paste content from:
-• Research paper PDFs (copy-paste the text)
-• Academic journal articles
-• Conference papers
-• Preprints (arXiv, etc.)
+<div id="page-analyze" class="page">
+<div class="analyze-card">
+<h2>Analyze a Research Paper</h2>
+<div class="form-row">
+<div class="form-group"><label>Target Level</label>
+<select id="levelSelect">
+<option value="school_student">School Student (14-18)</option>
+<option value="college_student" selected>College Student</option>
+<option value="researcher">Researcher</option>
+</select></div>
+<div class="form-group"><label>AI Model</label>
+<select id="modelSelect"><option value="command-a-03-2025">Command A (Cohere)</option></select></div>
+</div>
 
-Tip: For best results, include the title, abstract, introduction, methodology, results, and conclusion sections."
-                ></textarea>
-                <span class="char-count" id="charCount">0 characters</span>
-            </div>
+<div class="upload-zone" id="uploadZone">
+<div class="upload-zone-icon">&#128196;</div>
+<h4>Drop a PDF here or click to browse</h4>
+<p>Supports .pdf files - text will be extracted automatically</p>
+<input type="file" id="fileInput" accept=".pdf">
+</div>
 
-            <div class="level-selector">
-                <label>Select Explanation Level:</label>
-                <div class="level-options">
-                    <div class="level-option">
-                        <input type="radio" name="level" id="levelSchool" value="school_student">
-                        <label for="levelSchool">
-                            <span class="level-icon">🧒</span>
-                            <div class="level-info">
-                                <div class="level-name">School Student</div>
-                                <div class="level-desc">Simple language, analogies</div>
-                            </div>
-                        </label>
-                    </div>
-                    <div class="level-option">
-                        <input type="radio" name="level" id="levelCollege" value="college_student" checked>
-                        <label for="levelCollege">
-                            <span class="level-icon">🎓</span>
-                            <div class="level-info">
-                                <div class="level-name">College Student</div>
-                                <div class="level-desc">Balanced, foundational</div>
-                            </div>
-                        </label>
-                    </div>
-                    <div class="level-option">
-                        <input type="radio" name="level" id="levelResearcher" value="researcher">
-                        <label for="levelResearcher">
-                            <span class="level-icon">👨‍🔬</span>
-                            <div class="level-info">
-                                <div class="level-name">Researcher</div>
-                                <div class="level-desc">Technical, in-depth</div>
-                            </div>
-                        </label>
-                    </div>
-                </div>
-            </div>
+<div class="upload-info" id="uploadInfo">
+<span>&#10003; <span id="uploadFileName">file.pdf</span></span>
+<button onclick="clearUpload()">&times;</button>
+</div>
 
-            <button class="analyze-btn" id="analyzeBtn" onclick="analyzePaper()">
-                <span class="btn-icon">🔬</span>
-                Analyze Research Paper
-            </button>
-        </section>
+<div class="divider">or paste text manually</div>
 
-        <!-- Error Message -->
-        <div class="error-message" id="errorMessage">
-            <span class="error-icon">⚠️</span>
-            <span id="errorText"></span>
-        </div>
+<div class="form-group" style="margin-bottom:0"><label>Paste Research Paper</label>
+<textarea id="paperInput" placeholder="Paste the full text of a research paper here...&#10;&#10;Or upload a PDF above - the text will appear here automatically."></textarea></div>
+<button class="analyze-btn" id="analyzeBtn" onclick="analyzePaper()">Analyze Paper</button>
+<div class="status-bar" id="statusBar"><div class="spinner"></div><span id="statusText">AI is analyzing your paper. This usually takes 15-30 seconds...</span></div>
+</div>
+<div class="results-section" id="resultsSection">
+<div class="results-header">
+<h3 id="resultsTitle">Analysis Results</h3>
+<div class="btn-group">
+<button class="action-btn" onclick="expandAll()">Expand All</button>
+<button class="action-btn" onclick="collapseAll()">Collapse All</button>
+<button class="action-btn" onclick="copyResults()">Copy Text</button>
+</div>
+</div>
+<div id="resultsContainer"></div>
+</div>
+</div>
 
-        <!-- Loading Section -->
-        <section class="loading-section" id="loadingSection">
-            <div class="loading-spinner"></div>
-            <div class="loading-text">Analyzing Research Paper...</div>
-            <div class="loading-subtext">This may take 30-60 seconds depending on paper length</div>
-        </section>
+<div id="page-about" class="page">
+<div class="about-card">
+<h2>&#128214; About This Tool</h2>
+<p>AI Research Paper Simplifier parses dense academic research papers and generates <strong>25 structured, educational sections</strong> using large language models via the <strong>Cohere API</strong>.</p>
+<p>Upload a PDF or paste text - designed for students, researchers, and lifelong learners who want to quickly extract key insights without spending hours reading.</p>
+</div>
+<div class="about-card">
+<h2>&#9881; How It Works</h2>
+<ul>
+<li><strong>Step 1:</strong> Upload a PDF or paste the research paper text.</li>
+<li><strong>Step 2:</strong> Choose your target audience level (School Student, College Student, or Researcher).</li>
+<li><strong>Step 3:</strong> Click "Analyze Paper" and wait 15-30 seconds.</li>
+<li><strong>Step 4:</strong> Browse through 25 structured sections with expandable cards.</li>
+</ul>
+</div>
+<div class="about-card">
+<h2>&#128736; Tech Stack</h2>
+<div class="tech-grid">
+<div class="tech-item"><h4>Backend</h4><p>Python 3.12, Flask, PyMuPDF</p></div>
+<div class="tech-item"><h4>AI Engine</h4><p>Cohere Command A API</p></div>
+<div class="tech-item"><h4>Frontend</h4><p>Vanilla HTML/CSS/JS</p></div>
+<div class="tech-item"><h4>Hosting</h4><p>Render.com (free tier)</p></div>
+</div>
+</div>
+</div>
 
-        <!-- Results Section -->
-        <section class="results-section" id="resultsSection">
-            <div class="results-header">
-                <h2 class="results-title">📊 Analysis Results</h2>
-                <div class="results-meta">
-                    <span class="level-badge" id="levelBadge">College Student</span>
-                    <button class="copy-all-btn" onclick="copyAllResults()">
-                        📋 Copy All
-                    </button>
-                </div>
-            </div>
-            <div id="resultsContainer"></div>
-            <button class="new-session-btn" onclick="newSession()">
-                ✨ Analyze Another Paper
-            </button>
-        </section>
-    </main>
+<footer>Built with Flask + Cohere API | AI Research Paper Simplifier v5.0</footer>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <p>Powered by Google Gemini AI • Built for Students & Researchers</p>
-    </footer>
+<script>
+// Nav scroll effect
+window.addEventListener('scroll',function(){document.getElementById('mainNav').classList.toggle('scrolled',window.scrollY>10)});
 
-    <script>
-        // =============================================================================
-        // State Management
-        // =============================================================================
-        
-        let isAnalyzing = false;
-        let rawResults = '';
+function showPage(n){
+document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active')});
+document.querySelectorAll('.nav-links button').forEach(function(b){b.classList.remove('active')});
+document.getElementById('page-'+n).classList.add('active');
+document.querySelectorAll('.nav-links button').forEach(function(b){if(b.textContent.toLowerCase()===n)b.classList.add('active')});
+window.scrollTo({top:0,behavior:'smooth'})
+}
 
-        // =============================================================================
-        // DOM Elements
-        // =============================================================================
-        
-        const paperInput = document.getElementById('paperInput');
-        const charCount = document.getElementById('charCount');
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        const inputSection = document.getElementById('inputSection');
-        const errorMessage = document.getElementById('errorMessage');
-        const errorText = document.getElementById('errorText');
-        const loadingSection = document.getElementById('loadingSection');
-        const resultsSection = document.getElementById('resultsSection');
-        const resultsContainer = document.getElementById('resultsContainer');
-        const levelBadge = document.getElementById('levelBadge');
+var rawResult='';
+function getColor(i){var c=['n-blue','n-green','n-purple','n-orange','n-pink','n-teal','n-red'];return c[i%c.length]}
 
-        // =============================================================================
-        // Event Listeners
-        // =============================================================================
-        
-        paperInput.addEventListener('input', () => {
-            const length = paperInput.value.length;
-            charCount.textContent = `${length.toLocaleString()} characters`;
-        });
+function parseSections(text){
+var sections=[];
+var parts=text.split(/^## /m);
+if(parts[0].trim())sections.push({title:'Introduction',body:parts[0].trim()});
+for(var i=1;i<parts.length;i++){var lines=parts[i].split('\n');var title=lines[0].replace(/^[\d\.\s]+/,'').trim();var body=lines.slice(1).join('\n').trim();sections.push({title:title,body:body})}
+return sections
+}
 
-        // =============================================================================
-        // Core Functions
-        // =============================================================================
-        
-        function getSelectedLevel() {
-            const selected = document.querySelector('input[name="level"]:checked');
-            return selected ? selected.value : 'college_student';
-        }
+function simpleMarkdown(md){
+md=md.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+md=md.replace(/\*(.*?)\*/g,'<em>$1</em>');
+md=md.replace(/`(.*?)`/g,'<code>$1</code>');
+md=md.replace(/^- (.*)/gm,'<li>$1</li>');
+md=md.replace(/(<li>.*<\/li>)/gs,'<ul>$1</ul>');
+md=md.replace(/<\/ul>\s*<ul>/g,'');
+md=md.replace(/\n\n/g,'<br><br>');
+return md
+}
 
-        function getLevelDisplayName(level) {
-            const names = {
-                'school_student': 'School Student',
-                'college_student': 'College Student',
-                'researcher': 'Researcher'
-            };
-            return names[level] || 'College Student';
-        }
+function renderResults(text){
+rawResult=text;
+var container=document.getElementById('resultsContainer');
+container.innerHTML='';
+var sections=parseSections(text);
+sections.forEach(function(sec,i){
+var card=document.createElement('div');
+card.className='section-card';
+card.style.animationDelay=(i*0.05)+'s';
+card.innerHTML='<div class="section-header" onclick="toggleSection(this)"><div style="display:flex;align-items:center"><span class="section-num '+getColor(i)+'">'+(i+1)+'</span><span class="section-title">'+sec.title+'</span></div><span class="section-arrow">&#9660;</span></div><div class="section-body">'+simpleMarkdown(sec.body)+'</div>';
+container.appendChild(card)
+});
+document.getElementById('resultsSection').classList.add('visible');
+document.getElementById('resultsTitle').textContent='Analysis Results ('+sections.length+' sections)';
+// Auto open first section
+if(container.firstChild){container.firstChild.classList.add('open')}
+}
 
-        function showError(message) {
-            errorText.textContent = message;
-            errorMessage.classList.add('active');
-            setTimeout(() => {
-                errorMessage.classList.remove('active');
-            }, 8000);
-        }
+function toggleSection(h){h.parentElement.classList.toggle('open')}
+function expandAll(){document.querySelectorAll('.section-card').forEach(function(c){c.classList.add('open')})}
+function collapseAll(){document.querySelectorAll('.section-card').forEach(function(c){c.classList.remove('open')})}
+function copyResults(){navigator.clipboard.writeText(rawResult).then(function(){var b=document.querySelector('.action-btn:last-child');b.innerText='Copied!';setTimeout(function(){b.innerText='Copy Text'},2000)})}
 
-        function hideError() {
-            errorMessage.classList.remove('active');
-        }
+// PDF Upload
+var uploadZone=document.getElementById('uploadZone');
+var fileInput=document.getElementById('fileInput');
+var uploadInfo=document.getElementById('uploadInfo');
 
-        function setLoading(state) {
-            isAnalyzing = state;
-            analyzeBtn.disabled = state;
-            
-            if (state) {
-                analyzeBtn.innerHTML = '<span class="btn-icon">⏳</span> Analyzing...';
-                loadingSection.classList.add('active');
-                inputSection.style.display = 'none';
-                resultsSection.classList.remove('active');
-                hideError();
-            } else {
-                analyzeBtn.innerHTML = '<span class="btn-icon">🔬</span> Analyze Research Paper';
-                loadingSection.classList.remove('active');
-            }
-        }
+uploadZone.addEventListener('click',function(){fileInput.click()});
+uploadZone.addEventListener('dragover',function(e){e.preventDefault();uploadZone.classList.add('dragover')});
+uploadZone.addEventListener('dragleave',function(){uploadZone.classList.remove('dragover')});
+uploadZone.addEventListener('drop',function(e){e.preventDefault();uploadZone.classList.remove('dragover');if(e.dataTransfer.files.length)handleFile(e.dataTransfer.files[0])});
+fileInput.addEventListener('change',function(){if(fileInput.files.length)handleFile(fileInput.files[0])});
 
-        async function analyzePaper() {
-            // Prevent duplicate requests
-            if (isAnalyzing) return;
+function handleFile(file){
+if(!file.name.endsWith('.pdf')){alert('Only PDF files are supported');return}
+var formData=new FormData();
+formData.append('file',file);
+var sb=document.getElementById('statusBar');
+var st=document.getElementById('statusText');
+sb.classList.add('visible');
+st.textContent='Extracting text from PDF...';
+fetch('/api/upload',{method:'POST',body:formData}).then(function(r){return r.json()}).then(function(d){
+sb.classList.remove('visible');
+if(d.error){alert('Error: '+d.error);return}
+document.getElementById('paperInput').value=d.text;
+document.getElementById('uploadFileName').textContent=file.name+' ('+d.pages+' pages)';
+uploadInfo.classList.add('visible');
+uploadZone.style.display='none';
+document.querySelector('.divider').style.display='none';
+}).catch(function(e){sb.classList.remove('visible');alert('Upload failed: '+e.message)})
+}
 
-            const paperText = paperInput.value.trim();
-            
-            // Validation
-            if (!paperText) {
-                showError('Please paste your research paper content.');
-                paperInput.focus();
-                return;
-            }
+function clearUpload(){
+document.getElementById('paperInput').value='';
+uploadInfo.classList.remove('visible');
+uploadZone.style.display='';
+document.querySelector('.divider').style.display='';
+fileInput.value=''
+}
 
-            if (paperText.length < 50) {
-                showError('Paper content is too short. Please provide a complete research paper.');
-                paperInput.focus();
-                return;
-            }
+async function loadModels(){try{var r=await fetch('/api/models');var d=await r.json();var s=document.getElementById('modelSelect');s.innerHTML='';d.models.forEach(function(m){var o=document.createElement('option');o.value=m.id;o.textContent=m.name;s.appendChild(o)})}catch(e){}}
+loadModels();
 
-            const level = getSelectedLevel();
-            setLoading(true);
-
-            try {
-                const response = await fetch('/analyze', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        paper: paperText,
-                        level: level
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'Analysis failed. Please try again.');
-                }
-
-                // Store raw results for copy functionality
-                rawResults = data.result;
-                
-                // Update level badge
-                levelBadge.textContent = data.level || getLevelDisplayName(level);
-                
-                // Render results
-                renderResults(data.result);
-                
-                // Show results section
-                resultsSection.classList.add('active');
-                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-            } catch (error) {
-                console.error('Analysis error:', error);
-                showError(error.message || 'An unexpected error occurred. Please try again.');
-                inputSection.style.display = 'block';
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        // =============================================================================
-        // Results Rendering
-        // =============================================================================
-        
-        function parseMarkdownToHtml(markdown) {
-            let html = markdown;
-            
-            // Escape HTML entities (but preserve our markdown processing)
-            html = html.replace(/&/g, '&amp;')
-                       .replace(/</g, '&lt;')
-                       .replace(/>/g, '&gt;');
-            
-            // Headers
-            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
-            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
-            html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
-            
-            // Bold and italic
-            html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
-            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-            
-            // Inline code
-            html = html.replace(/`(.+?)`/g, '<code>$1</code>');
-            
-            // Horizontal rules
-            html = html.replace(/^---$/gm, '<hr>');
-            
-            // Unordered lists
-            html = html.replace(/^[-*] (.+)$/gm, '<li>$1</li>');
-            html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
-            
-            // Ordered lists
-            html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
-            
-            // Paragraphs (lines that aren't already wrapped)
-            html = html.replace(/^(?!<[hluo])(.+)$/gm, '<p>$1</p>');
-            
-            // Clean up empty paragraphs
-            html = html.replace(/<p>\s*<\/p>/g, '');
-            
-            return html;
-        }
-
-        function renderResults(markdownContent) {
-            // Split content by ## headers
-            const sections = [];
-            const lines = markdownContent.split('\n');
-            let currentSection = null;
-            let currentContent = [];
-
-            for (const line of lines) {
-                if (line.startsWith('## ')) {
-                    // Save previous section
-                    if (currentSection) {
-                        sections.push({
-                            title: currentSection,
-                            content: currentContent.join('\n').trim()
-                        });
-                    }
-                    // Start new section
-                    currentSection = line.replace('## ', '').trim();
-                    currentContent = [];
-                } else if (currentSection) {
-                    currentContent.push(line);
-                }
-            }
-
-            // Save last section
-            if (currentSection) {
-                sections.push({
-                    title: currentSection,
-                    content: currentContent.join('\n').trim()
-                });
-            }
-
-            // Generate HTML for sections
-            let html = '';
-            sections.forEach((section, index) => {
-                const isOpen = index < 3; // First 3 sections open by default
-                html += `
-                    <div class="result-card ${isOpen ? 'open' : ''}" onclick="toggleCard(this)">
-                        <div class="result-card-header">
-                            <div class="left">
-                                <span class="result-card-title">${escapeHtml(section.title)}</span>
-                            </div>
-                            <span class="result-card-toggle">▼</span>
-                        </div>
-                        <div class="result-card-body">
-                            ${parseMarkdownToHtml(section.content)}
-                        </div>
-                    </div>
-                `;
-            });
-
-            resultsContainer.innerHTML = html;
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function toggleCard(card) {
-            card.classList.toggle('open');
-        }
-
-        // =============================================================================
-        // Utility Functions
-        // =============================================================================
-        
-        function copyAllResults() {
-            navigator.clipboard.writeText(rawResults).then(() => {
-                const btn = document.querySelector('.copy-all-btn');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '✅ Copied!';
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                }, 2000);
-            }).catch(err => {
-                console.error('Copy failed:', err);
-                showError('Failed to copy results. Please try selecting and copying manually.');
-            });
-        }
-
-        function newSession() {
-            // Reset all states
-            paperInput.value = '';
-            charCount.textContent = '0 characters';
-            resultsSection.classList.remove('active');
-            resultsContainer.innerHTML = '';
-            inputSection.style.display = 'block';
-            rawResults = '';
-            hideError();
-            
-            // Scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            // Focus on input
-            setTimeout(() => paperInput.focus(), 500);
-        }
-
-        // =============================================================================
-        // Keyboard Shortcuts
-        // =============================================================================
-        
-        document.addEventListener('keydown', (e) => {
-            // Ctrl/Cmd + Enter to analyze
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                e.preventDefault();
-                analyzePaper();
-            }
-        });
-    </script>
+async function analyzePaper(){
+var l=document.getElementById('levelSelect').value;
+var m=document.getElementById('modelSelect').value;
+var p=document.getElementById('paperInput').value;
+if(!p.trim()){alert('Please paste or upload a research paper first.');return}
+var b=document.getElementById('analyzeBtn');
+var sb=document.getElementById('statusBar');
+var st=document.getElementById('statusText');
+var rs=document.getElementById('resultsSection');
+b.disabled=true;b.innerText='Analyzing...';
+sb.classList.add('visible');
+st.textContent='AI is analyzing your paper. This usually takes 15-30 seconds...';
+rs.classList.remove('visible');
+try{var r=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({paper:p,level:l,model:m})});var d=await r.json();if(d.error){alert('Error: '+d.error)}else{renderResults(d.result)}}catch(e){alert('Network error: '+e.message)}finally{b.disabled=false;b.innerText='Analyze Paper';sb.classList.remove('visible')}
+}
+</script>
 </body>
 </html>
