@@ -1,18 +1,18 @@
-# Research Paper Simplifier
+# AI Resume Analyzer
 
-Paste a research paper or upload a PDF and get a clean breakdown of everything in it - explained simply, with flashcards, MCQs, and interview questions ready to study.
+Upload your resume or paste the text, tell us what job you're targeting, and get a detailed breakdown of what's working and what needs fixing.
 
 ## What it does
 
-You paste in a research paper (or upload a PDF), pick who it's explained for (school student, college student, or researcher), and it gives you 25 organized sections covering:
+You paste your resume (or upload a PDF), pick your experience level, and it gives you 15 organized sections covering:
 
-- Simple explanations at your level
-- Problem statement and why the research matters
-- Methodology step by step
-- Key contributions, advantages, limitations
-- Flashcards and MCQs for studying
-- Viva and interview questions
-- Future research ideas
+- Score out of 100
+- Skills assessment and what's missing
+- ATS compatibility check
+- Missing keywords recruiters search for
+- Top 5 improvements ranked by impact
+- Red flags that might turn off recruiters
+- Rewritten examples you can copy
 
 ## How to run it on your computer
 
@@ -64,17 +64,9 @@ Wait a couple minutes and you'll have a live link.
 ## What it's built with
 
 - **Python + Flask** - backend
-- **Cohere API** - the AI that reads and explains papers
+- **Cohere API** - the AI that reads and explains resumes
 - **PyMuPDF** - reads text from PDF files
 - **HTML/CSS/JS** - the frontend (no frameworks, just plain code)
-
-## Files
-
-- `app.py` - the main server code
-- `index.html` - the website frontend
-- `.env` - your API key (don't share this)
-- `requirements.txt` - list of packages to install
-- `render.yaml` - deployment config for Render
 
 ## License
 
