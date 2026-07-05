@@ -1,112 +1,81 @@
-# AI Research Paper Simplifier
+# Research Paper Simplifier
 
-An intelligent web application that parses dense academic research papers and generates 25 structured, educational sections using the Cohere API. Supports PDF upload with automatic text extraction.
+Paste a research paper or upload a PDF and get a clean breakdown of everything in it - explained simply, with flashcards, MCQs, and interview questions ready to study.
 
-![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)
-![Flask](https://img.shields.io/badge/Flask-3.0-black?logo=flask)
-![Cohere](https://img.shields.io/badge/Cohere-Command%20A-39594D?logo=cohere&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green)
+## What it does
 
----
+You paste in a research paper (or upload a PDF), pick who it's explained for (school student, college student, or researcher), and it gives you 25 organized sections covering:
 
-## The Core Problem
+- Simple explanations at your level
+- Problem statement and why the research matters
+- Methodology step by step
+- Key contributions, advantages, limitations
+- Flashcards and MCQs for studying
+- Viva and interview questions
+- Future research ideas
 
-Standard LLM summarization often fails in academic contexts because models tend to **hallucinate** data not present in the text or provide generic overviews that miss micro-details. Students and researchers need a tool that extracts _exact_ methodologies, generates _testable_ knowledge (MCQs, flashcards), and adapts the complexity based on the reader's academic level without inventing information.
+## How to run it on your computer
 
-## Key Features
-
-- **PDF Upload** - Drag and drop PDF research papers, text extracted automatically using PyMuPDF
-- **25 Structured Sections** - From ELI10 explanations to technical deep-dives, methodology breakdowns, and research gaps
-- **3 Explanation Levels** - School Student, College Student, and Researcher modes
-- **Study Tools** - Auto-generated flashcards, MCQs, viva questions, and interview prep
-- **Multi-Page SPA** - Home, Analyze, and About pages with smooth navigation
-- **Polished UI** - Glassmorphism navbar, animated cards, gradient accents, responsive design
-- **Collapsible Sections** - Expand/collapse individual sections, expand all, copy to clipboard
-- **Anti-Hallucination Guardrails** - Strict prompt constraints ensure the model outputs "Not mentioned in the paper" rather than guessing
-
-## Tech Stack
-
-| Layer        | Technology                  | Purpose                             |
-|:-------------|:----------------------------|:------------------------------------|
-| **Backend**  | Python 3.12, Flask          | REST API routing & request handling |
-| **AI Engine**| Cohere Command A API        | LLM inference via `/v2/chat`        |
-| **PDF**      | PyMuPDF (fitz)              | PDF text extraction                 |
-| **Frontend** | HTML5, CSS3, Vanilla JS     | SPA with collapsible card UI        |
-| **Hosting**  | Render.com                  | Free tier with auto-deploy          |
-
-## Local Setup
-
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/Saikurra03/research-paper-simplifier.git
-   cd research-paper-simplifier
-   ```
-
-2. **Create and activate a virtual environment:**
-
-   ```powershell
-   python -m venv venv
-   .\venv\Scripts\Activate
-   ```
-
-3. **Install dependencies:**
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configure API Key:**
-
-   Create a `.env` file in the project root:
-
-   ```
-   COHERE_API_KEY=your-api-key-here
-   ```
-
-   Get your free API key from https://dashboard.cohere.com/api-keys
-
-5. **Run the application:**
-
-   ```bash
-   python app.py
-   ```
-
-   The server will start on port 8000 and open in your browser.
-
-## Project Structure
-
+**Step 1:** Download the code
 ```
-.
-├── .gitignore          # Prevents venv/.env/cache from being tracked
-├── .env                # API key (not committed)
-├── render.yaml         # Render deployment config
-├── requirements.txt    # Python dependencies
-├── app.py              # Flask server, API routes, Cohere integration
-├── index.html          # SPA frontend with multi-page navigation
-└── README.md           # This file
+git clone https://github.com/Saikurra03/research-paper-simplifier.git
+cd research-paper-simplifier
 ```
 
-## API Endpoints
+**Step 2:** Make a virtual environment
+```
+python -m venv venv
+venv\Scripts\activate
+```
 
-| Method | Endpoint       | Description                        |
-|:-------|:---------------|:-----------------------------------|
-| GET    | `/`            | Serve the SPA frontend             |
-| POST   | `/api/upload`  | Extract text from uploaded PDF     |
-| POST   | `/api/analyze` | Analyze paper and return 25 sections |
-| GET    | `/api/models`  | List available AI models           |
+**Step 3:** Install the stuff it needs
+```
+pip install -r requirements.txt
+```
 
-## Deployment to Render
+**Step 4:** Get a free API key
+- Go to https://dashboard.cohere.com/api-keys
+- Sign up and create a key
+- Copy it
+
+**Step 5:** Create a `.env` file in the project folder and paste your key
+```
+COHERE_API_KEY=paste-your-key-here
+```
+
+**Step 6:** Run it
+```
+python app.py
+```
+
+It'll open in your browser at http://127.0.0.1:8000
+
+## How to put it online (free)
 
 1. Push your code to GitHub
-2. Go to https://dashboard.render.com and sign up with GitHub
-3. Click **New +** > **Web Service**
-4. Connect your repository
-5. Set environment variable: `COHERE_API_KEY` = your key
-6. Click **Create Web Service**
+2. Go to https://render.com and sign up with GitHub
+3. Click New + > Web Service
+4. Pick your repo
+5. In Environment, add: `COHERE_API_KEY` = your key
+6. Click Create Web Service
 
-Your app will be live at `https://your-app-name.onrender.com`.
+Wait a couple minutes and you'll have a live link.
+
+## What it's built with
+
+- **Python + Flask** - backend
+- **Cohere API** - the AI that reads and explains papers
+- **PyMuPDF** - reads text from PDF files
+- **HTML/CSS/JS** - the frontend (no frameworks, just plain code)
+
+## Files
+
+- `app.py` - the main server code
+- `index.html` - the website frontend
+- `.env` - your API key (don't share this)
+- `requirements.txt` - list of packages to install
+- `render.yaml` - deployment config for Render
 
 ## License
 
-MIT License
+Do whatever you want with it.
