@@ -1,55 +1,45 @@
-# 🧪 AI Research Paper Simplifier
+# AI Research Paper Simplifier
 
-An intelligent, stateless web application engineered to parse dense academic research papers and generate 25 structured, educational sections using zero-shot prompt engineering with Google Gemini 2.5 Flash.
+An intelligent web application that parses dense academic research papers and generates 25 structured, educational sections using the Cohere API. Supports PDF upload with automatic text extraction.
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)
 ![Flask](https://img.shields.io/badge/Flask-3.0-black?logo=flask)
-![Gemini](https://img.shields.io/badge/Google%20Gemini-2.5%20Flash-4285F4?logo=google&logoColor=white)
-![Architecture](https://img.shields.io/badge/Architecture-REST_Single_Page-green)
+![Cohere](https://img.shields.io/badge/Cohere-Command%20A-39594D?logo=cohere&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
 
 ---
 
-## 🎯 The Core Problem
+## The Core Problem
 
 Standard LLM summarization often fails in academic contexts because models tend to **hallucinate** data not present in the text or provide generic overviews that miss micro-details. Students and researchers need a tool that extracts _exact_ methodologies, generates _testable_ knowledge (MCQs, flashcards), and adapts the complexity based on the reader's academic level without inventing information.
 
-## ⚙️ Architectural Deep-Dive
+## Key Features
 
-This project bypasses heavy frontend frameworks (React/Next.js) and backend ORMs in favor of a lightweight, highly efficient architecture:
+- **PDF Upload** - Drag and drop PDF research papers, text extracted automatically using PyMuPDF
+- **25 Structured Sections** - From ELI10 explanations to technical deep-dives, methodology breakdowns, and research gaps
+- **3 Explanation Levels** - School Student, College Student, and Researcher modes
+- **Study Tools** - Auto-generated flashcards, MCQs, viva questions, and interview prep
+- **Multi-Page SPA** - Home, Analyze, and About pages with smooth navigation
+- **Polished UI** - Glassmorphism navbar, animated cards, gradient accents, responsive design
+- **Collapsible Sections** - Expand/collapse individual sections, expand all, copy to clipboard
+- **Anti-Hallucination Guardrails** - Strict prompt constraints ensure the model outputs "Not mentioned in the paper" rather than guessing
 
-1. **Stateless Backend (Flask):** Uses a single `/analyze` POST endpoint. It takes the raw text payload, injects it into a heavily engineered system prompt, and streams the response back as JSON. No session state or databases are required.
-2. **Zero-Shot Prompt Engineering:** The core logic lies in `research_paper_prompt()`. The prompt is strictly bounded using delimiters and explicit negative constraints ("Do NOT invent data") to force the LLM into a constrained output format (Markdown with `##` headers).
-3. **Client-Side Markdown Parsing:** Instead of adding a Python dependency like `markdown` or `flask-markdown`, the frontend JavaScript handles the parsing. It uses regex to split the API response by `##` headers and dynamically generates collapsible HTML cards. This reduces server CPU load.
-4. **CORS Integration:** Flask-CORS handles cross-origin requests seamlessly, allowing the frontend to be easily migrated to a separate domain or CDN later if needed.
+## Tech Stack
 
-## 🔑 Key Technical Decisions
+| Layer        | Technology                  | Purpose                             |
+|:-------------|:----------------------------|:------------------------------------|
+| **Backend**  | Python 3.12, Flask          | REST API routing & request handling |
+| **AI Engine**| Cohere Command A API        | LLM inference via `/v2/chat`        |
+| **PDF**      | PyMuPDF (fitz)              | PDF text extraction                 |
+| **Frontend** | HTML5, CSS3, Vanilla JS     | SPA with collapsible card UI        |
+| **Hosting**  | Render.com                  | Free tier with auto-deploy          |
 
-- **Why `gemini-2.5-flash`?** While Pro models offer deeper reasoning, Flash provides sub-10-second latency for 25 complex sections, which is critical for real-time UI feedback. The prompt is engineered to compensate for Flash's lighter reasoning by providing strict structural guidelines.
-- **Why Vanilla JS instead of React?** Since the app consists of a single input form and a dynamic results container, a virtual DOM is unnecessary. Vanilla JS keeps the bundle size at 0 KB and eliminates build steps (no Webpack/Vite required).
-- **Why no Database?** Research papers can contain sensitive, unpublished data. By keeping the application completely stateless and processing text in-memory, we ensure zero data retention and maximum user privacy.
-
-## ✨ Key Features
-
-- **Dynamic Complexity Scaling:** 3-tier explanation levels (School, College, Researcher) handled entirely via prompt context switching.
-- **Structured Output Generation:** Automatically generates ELI10 explanations, step-by-step methodologies, MCQs, Viva questions, and Future Research ideas.
-- **Collapsible UI Architecture:** Frontend parses Markdown headers into isolated DOM components, preventing UI lag on long texts.
-- **Anti-Hallucination Guardrails:** Strict prompt constraints ensure the model explicitly outputs "Not mentioned in the paper" rather than guessing.
-
-## 🛠️ Tech Stack
-
-| Layer            | Technology              | Purpose                             |
-| :--------------- | :---------------------- | :---------------------------------- |
-| **Backend**      | Python 3.12, Flask 3.0  | REST API routing & request handling |
-| **AI Engine**    | Google Generative AI    | `gemini-2.5-flash` model inference  |
-| **Cross-Origin** | Flask-CORS 4.0          | Local development API bridging      |
-| **Frontend**     | HTML5, CSS3, Vanilla JS | UI rendering & client-side parsing  |
-
-## 🚀 Local Setup & Installation
+## Local Setup
 
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/YOUR_USERNAME/research-paper-simplifier.git
+   git clone https://github.com/Saikurra03/research-paper-simplifier.git
    cd research-paper-simplifier
    ```
 
@@ -67,30 +57,56 @@ This project bypasses heavy frontend frameworks (React/Next.js) and backend ORMs
    ```
 
 4. **Configure API Key:**
-   Open `app.py` and replace the placeholder inside `genai.configure()` with your Google Gemini API key.
+
+   Create a `.env` file in the project root:
+
+   ```
+   COHERE_API_KEY=your-api-key-here
+   ```
+
+   Get your free API key from https://dashboard.cohere.com/api-keys
 
 5. **Run the application:**
+
    ```bash
    python app.py
    ```
-   The server will start on port 8000 and automatically open in your default browser.
 
-## 📂 Project Structure
+   The server will start on port 8000 and open in your browser.
 
-```text
+## Project Structure
+
+```
 .
-├── .gitignore          # Prevents venv/cache/secret files from being tracked
-├── README.md           # Architectural documentation and setup guide
-├── requirements.txt    # Pinned Python dependencies
-├── app.py              # Flask server, API route, and Prompt Engineering logic
-└── index.html          # Single-page UI, CSS styling, and Markdown parser
+├── .gitignore          # Prevents venv/.env/cache from being tracked
+├── .env                # API key (not committed)
+├── render.yaml         # Render deployment config
+├── requirements.txt    # Python dependencies
+├── app.py              # Flask server, API routes, Cohere integration
+├── index.html          # SPA frontend with multi-page navigation
+└── README.md           # This file
 ```
 
-## 📄 License
+## API Endpoints
 
-This project is licensed under the MIT License.
+| Method | Endpoint       | Description                        |
+|:-------|:---------------|:-----------------------------------|
+| GET    | `/`            | Serve the SPA frontend             |
+| POST   | `/api/upload`  | Extract text from uploaded PDF     |
+| POST   | `/api/analyze` | Analyze paper and return 25 sections |
+| GET    | `/api/models`  | List available AI models           |
 
-```
+## Deployment to Render
 
-**Reply "SAVED" once you have pasted this into VS Code and pressed Ctrl+S.** Then we will do the Git push!
-```
+1. Push your code to GitHub
+2. Go to https://dashboard.render.com and sign up with GitHub
+3. Click **New +** > **Web Service**
+4. Connect your repository
+5. Set environment variable: `COHERE_API_KEY` = your key
+6. Click **Create Web Service**
+
+Your app will be live at `https://your-app-name.onrender.com`.
+
+## License
+
+MIT License
